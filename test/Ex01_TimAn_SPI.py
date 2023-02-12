@@ -71,4 +71,9 @@ if __name__ == '__main__':
     dstDir = 'ta_'+ type + '_' + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     zs = zoomScales(1E-7)
     dispList = plotTa(tim, dat, ta, tas, chs, zs, dstDir)
-    taXlsx(ta, tas, dispList, dstDir)
+    info = [
+        ['Test Data', type, '']
+        ,['Time Step', timestep, '##0E+0']
+        ,['Record Length', len(tdat), '']
+    ]
+    taXlsx(ta, tas, dispList, info, dstDir)

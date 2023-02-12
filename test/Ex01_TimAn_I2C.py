@@ -60,7 +60,7 @@ if __name__ == '__main__':
     zs = zoomScales(1E-7)
     dispList = plotTa(tim, dat, ta, tas, chs, zs, dstDir)
     info = [
-        ['Test Data', 'I2C', '']
+        ['Test Data', type, '']
         ,['Time Step', timestep, '##0E+0']
         ,['Record Length', len(tdat), '']
     ]

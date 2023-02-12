@@ -21,6 +21,7 @@ ap = dict(color = 'gray', alpha = 0.5, width = 0, headwidth = 0, shrink = 0.0)
 class makeFig:
     def __init__(self, tim, dat, tas, chs):
         self.aplist = []    #再設定時に削除するannotateとpatchリスト
+        self.hllist = []    #再設定時に削除するhlineリスト
         nTr = len(dat)
         self.fig = plt.figure(figsize=tas.figsize, dpi=tas.dpi)
         gs0 = gridspec.GridSpec(len(tas.hratios), 1, height_ratios=tas.hratios)
@@ -44,17 +45,23 @@ class makeFig:
             for t, v in zip(ta.ht[name], ta.hv[name]):
                 if v == tv:
                     self.ax[0][tr].annotate(str, xy=(t, vp), xytext=(t, vp))
+    def hlines(self, ch):
+        for anp in self.hllist: anp.remove()
+        self.hllist[:] = []
+        for [c, th] in ch:
+            self.hllist.append(self.ax[1][c].axhline(y=th, xmin=0, xmax=1, color='gray', alpha=0.5))
+        pass
     def ann(self, ch, v, tg, lny, vly, vty):
-            for anp in self.aplist:anp.remove()
-            self.aplist[:] = []
-            for c, ly, t in zip(ch, lny, tg):
-                self.aplist.append(self.ax[2][0].annotate(engFmt(t), xy=(t, ly[0]), xytext=(t, ly[1]), annotation_clip=False, arrowprops=ap))
-                for i in range(c, len(self.ax[1])):
-                    self.aplist.append(self.ax[1][i].axvline(x=t, ymin=0, ymax=1, color='gray', alpha=0.5))
-            self.aplist.append(self.ax[2][0].annotate(engFmt(v), xy=(tg[1], vty), xytext=(tg[1], vty)))
-            patch = patches.FancyArrow(x=tg[1], y=vly, dx=v, dy=0, width=0, head_width=0.1, head_length=0.05*v, length_includes_head=True)
-            self.ax[2][0].add_patch(patch)
-            self.aplist.append(patch)
+        for anp in self.aplist: anp.remove()
+        self.aplist[:] = []
+        for [c, th], ly, t in zip(ch, lny, tg):
+            self.aplist.append(self.ax[2][0].annotate(engFmt(t), xy=(t, ly[0]), xytext=(t, ly[1]), annotation_clip=False, arrowprops=ap))
+            for ax in self.ax[1][c:]:
+                self.aplist.append(ax.axvline(x=t, ymin=0, ymax=1, color='gray', alpha=0.5))
+        self.aplist.append(self.ax[2][0].annotate(engFmt(v), xy=(tg[1], vty), xytext=(tg[1], vty)))
+        patch = patches.FancyArrow(x=tg[1], y=vly, dx=v, dy=0, width=0, head_width=0.1, head_length=0.05*v, length_includes_head=True)
+        self.ax[2][0].add_patch(patch)
+        self.aplist.append(patch)
     def zoom(self, xmin, xmax):
         self.ax[1][0].set_xlim(xmin, xmax)
         for ax in self.ax[0]:
@@ -94,6 +101,7 @@ def plotTa(tim, dat, ta, tas, chs, zs, dstDir):
                 elif s == 'max':
                     if len(sellist) == 0 or sellist[-1][0] != imax:
                         sellist.append([imax, dstDir + '\\' + name + '_' + str(imax) + '.png'])
+            afig.hlines(ch)
         dispList.append(sellist)
         sn = len(sellist)
         for si, [i, dstFile] in enumerate(sellist):

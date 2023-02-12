@@ -37,11 +37,11 @@ def TASettings_SPI(
         ]
         ,[  #イベント有データポイントのみ解析
         ['tSCK', [0, None], [ #SCK period
-            [[['==', 'wtSCK', 1], ['==', '!SCK', 1], ['==', 'SCK', 3]], ['-', '@', '@wtSCK']]
+            [[['==', 'wtSCK', 1], ['==', '!SCK', 1], ['==', 'SCK', 0]], ['-', '@', '@wtSCK']]
         ]]
         ,['wtSCK', [0, None], [ #Waiting for SCK period
             [[['==', 'wtSCK', 1], ['>', 'CS', 0]], ['=', 0]]
-            ,[[['==', 'CS', 0], ['==', '!SCK', 1], ['==', 'SCK', 3]], ['=', 1]]
+            ,[[['==', 'CS', 0], ['==', '!SCK', 1], ['==', 'SCK', 0]], ['=', 1]]
         ]]
         ,['tCSS', [0, None], [ #CS setup time
             [[['==', 'wtCSS', 1], ['==', '!SCK', 1], ['==', 'SCK', 3]], ['-', '@', '@wtCSS']]
@@ -209,37 +209,44 @@ def TASettings_SPI(
     ]
     return tas
 
-def DispSettings_SPI(cCS, cSCK, cMOSI, cMISO):
+def DispSettings_SPI(
+    ths     #閾値
+    ,chn    #チャネル番号
+):
+    thCS, thSCK, thMOSI, thMISO = ths
+    cCS, cSCK, cMOSI, cMISO = chn
     return [
-        ['tSCK', 'tSCK: SCK period', [cSCK, cSCK], ['min', 'max']]
-        ,['tCSS', 'tCSS: CS setup time', [cSCK, cCS], ['all']]
-        ,['tCSH', 'tCSH: CS hold time', [cCS, cSCK], ['all']]
-        ,['tCLD', 'tCLD: Clock delay time', [cSCK, cCS], ['all']]
-        ,['tCLE', 'tCLE: Clock enable time', [cCS, cSCK], ['all']]
-        ,['tHIGH', 'tHIGH: SCK high time', [cSCK, cSCK], ['min', 'max']]
-        ,['tLOW', 'tLOW: SCK low time', [cSCK, cSCK], ['min', 'max']]
-        ,['tRSK', 'tRSK: SCK rise time', [cSCK, cSCK], ['min', 'max']]
-        ,['tFSK', 'tFSK: SCK fall time', [cSCK, cSCK], ['min', 'max']]
-        ,['tDS_R', 'tDS_R: Data input setup time(rise)', [cSCK, cMOSI], ['all']]
-        ,['tDS_F', 'tDS_F: Data input setup time(fall)', [cSCK, cMOSI], ['all']]
-        ,['tDH_R', 'tDH_R: Data input hold time(rise)', [cMOSI, cSCK], ['all']]
-        ,['tDH_F', 'tDH_F: Data input hold time(fall)', [cMOSI, cSCK], ['all']]
-        ,['tOH_R', 'tOH_R: Data output hold time(rise)', [cMISO, cSCK], ['all']]
-        ,['tOH_F', 'tOH_F: Data output hold time(fall)', [cMISO, cSCK], ['all']]
-        ,['tOD_R', 'tOD_R: Data output delay time(rise)', [cMISO, cSCK], ['all']]
-        ,['tOD_F', 'tOD_F: Data output delay time(fall)', [cMISO, cSCK], ['all']]
-        ,['tMISOS_R', 'tMISOS_R: MISO input setup time(rise)', [cSCK, cMISO], ['all']]
-        ,['tMISOS_F', 'tMISOS_F: MISO input setup time(fall)', [cSCK, cMISO], ['all']]
-        ,['tMISOH_R', 'tDH_R: MISO input hold time(rise)', [cMISO, cSCK], ['all']]
-        ,['tMISOH_F', 'tDH_F: MISO input hold time(fall)', [cMISO, cSCK], ['all']]
+        ['tSCK', 'tSCK: SCK period', [[cSCK, thSCK[0]], [cSCK, thSCK[0]]], ['min', 'max']]
+        ,['tCSS', 'tCSS: CS setup time', [[cSCK, thSCK[0]], [cCS, thCS[0]]], ['all']]
+        ,['tCSH', 'tCSH: CS hold time', [[cCS, thCS[0]], [cSCK, thSCK[1]]], ['all']]
+        ,['tCLD', 'tCLD: Clock delay time', [[cSCK, thSCK[1]], [cCS, thCS[1]]], ['all']]
+        ,['tCLE', 'tCLE: Clock enable time', [[cCS, thCS[0]], [cSCK, thSCK[1]]], ['all']]
+        ,['tHIGH', 'tHIGH: SCK high time', [[cSCK, thSCK[0]], [cSCK, thSCK[0]]], ['min', 'max']]
+        ,['tLOW', 'tLOW: SCK low time', [[cSCK, thSCK[0]], [cSCK, thSCK[0]]], ['min', 'max']]
+        ,['tRSK', 'tRSK: SCK rise time', [[cSCK, thSCK[1]], [cSCK, thSCK[0]]], ['min', 'max']]
+        ,['tFSK', 'tFSK: SCK fall time', [[cSCK, thSCK[0]], [cSCK, thSCK[1]]], ['min', 'max']]
+        ,['tDS_R', 'tDS_R: Data input setup time(rise)', [[cSCK, thSCK[0]], [cMOSI, thMOSI[1]]], ['all']]
+        ,['tDS_F', 'tDS_F: Data input setup time(fall)', [[cSCK, thSCK[0]], [cMOSI, thMOSI[0]]], ['all']]
+        ,['tDH_R', 'tDH_R: Data input hold time(rise)', [[cMOSI, thMOSI[0]], [cSCK, thSCK[1]]], ['all']]
+        ,['tDH_F', 'tDH_F: Data input hold time(fall)', [[cMOSI, thMOSI[1]], [cSCK, thSCK[1]]], ['all']]
+        ,['tOH_R', 'tOH_R: Data output hold time(rise)', [[cMISO, thMISO[0]], [cSCK, thSCK[0]]], ['all']]
+        ,['tOH_F', 'tOH_F: Data output hold time(fall)', [[cMISO, thMISO[1]], [cSCK, thSCK[0]]], ['all']]
+        ,['tOD_R', 'tOD_R: Data output delay time(rise)', [[cMISO, thMISO[1]], [cSCK, thSCK[0]]], ['all']]
+        ,['tOD_F', 'tOD_F: Data output delay time(fall)', [[cMISO, thMISO[0]], [cSCK, thSCK[0]]], ['all']]
+        ,['tMISOS_R', 'tMISOS_R: MISO input setup time(rise)', [[cSCK, thSCK[1]], [cMISO, thMISO[1]]], ['all']]
+        ,['tMISOS_F', 'tMISOS_F: MISO input setup time(fall)', [[cSCK, thSCK[1]], [cMISO, thMISO[0]]], ['all']]
+        ,['tMISOH_R', 'tDH_R: MISO input hold time(rise)', [[cMISO, thMISO[0]], [cSCK, thSCK[1]]], ['all']]
+        ,['tMISOH_F', 'tDH_F: MISO input hold time(fall)', [[cMISO, thMISO[1]], [cSCK, thSCK[1]]], ['all']]
 ]
 
-def StrSettings_SPI(cCS, cSCK, cMOSI, cMISO):
+def StrSettings_SPI(
+    chn    #チャネル番号
+):
     return [
     ]
 
 def TASettings_I2C(
-    ths     #閾値([[SCL上側,下側],[SDA上側,下側])
+    ths     #閾値
     ,chn    #チャネル番号
 ):
     thSCL, thSDA = ths
@@ -263,12 +270,12 @@ def TASettings_I2C(
         ]
         ,[  #イベント有データポイントのみ解析
         ['tSCL', [0, None], [ #SCL period
-            [[['==', 'wtSCL', 1], ['==', '!SCL', 1], ['==', 'SCL', 3]], ['-', '@', '@wtSCL']]
+            [[['==', 'wtSCL', 1], ['==', '!SCL', 1], ['==', 'SCL', 0]], ['-', '@', '@wtSCL']]
         ]]
         ,['wtSCL', [0, None], [ #Waiting for SCL period
             [[['==', 'wtSCL', 1], ['==', 'St', 1]], ['=', 0]]
             ,[[['==', 'wtSCL', 1], ['==', 'Sp', 1]], ['=', 0]]
-            ,[[['==', '!SCL', 1], ['==', 'SCL', 3]], ['=', 1]]
+            ,[[['==', '!SCL', 1], ['==', 'SCL', 0]], ['=', 1]]
         ]]
         ,['tR_SCL', [0, None], [ #SCL rise time
             [[['==', '!SCL', 1], ['==', 'SCL', 3], ['==', ['SCL',-2], 1]], ['-', '@', ['@SCL',-2]]]
@@ -468,34 +475,42 @@ def TASettings_I2C(
     ]
     return tas
 
-def DispSettings_I2C(cSCL, cSDA):
+def DispSettings_I2C(
+    ths     #閾値
+    ,chn    #チャネル番号
+):
+    thSCL, thSDA = ths
+    cSCL, cSDA = chn
     return [
-         ['tSCL', 'tSCL: SCL period', [cSCL, cSCL], ['min', 'max']]
-        ,['tR_SCL', 'tR_SCL: SCL rise time', [cSCL, cSCL], ['min', 'max']]
-        ,['tF_SCL', 'tF_SCL: SCL fall time', [cSCL, cSCL], ['min', 'max']]
-        ,['tLOW', 'tLOW: SCL low time', [cSCL, cSCL], ['min', 'max']]
-        ,['tHIGH', 'tHIGH: SCL high time', [cSCL, cSCL], ['min', 'max']]
-        ,['tR_SDA', 'tR_SDA: SDA rise time', [cSDA, cSDA], ['min', 'max']]
-        ,['tF_SDA', 'tF_SDA: SDA fall time', [cSDA, cSDA], ['min', 'max']]
-        ,['tSU_STA', 'tSU_STA: Start condition setup time', [cSDA, cSCL], ['all']]
-        ,['tHD_STA', 'tHD_STA: Start condition hold time', [cSCL, cSDA], ['all']]
-        ,['tBUF', 'tBUF: Bus free time', [cSDA, cSDA], ['all']]
-        ,['tSU_STO', 'tSU_STO: Stop condition setup time', [cSDA, cSCL], ['all']]
-        ,['tSU_DAT_R', 'tSU_DAT_R: Data input setup time(rise)', [cSCL, cSDA], ['all']]
-        ,['tSU_DAT_F', 'tSU_DAT_F: Data input setup time(fall)', [cSCL, cSDA], ['all']]
-        ,['tHD_DAT_R', 'tHD_DAT_R: Data input hold time(rise)', [cSDA, cSCL], ['all']]
-        ,['tHD_DAT_F', 'tHD_DAT_F: Data input hold time(fall)', [cSDA, cSCL], ['all']]
-        ,['tSU_DAT_MI_R', 'tSU_DAT_MI_R: Data input setup time(master input)(rise)', [cSCL, cSDA], ['all']]
-        ,['tSU_DAT_MI_F', 'tSU_DAT_MI_F: Data input setup time(master input)(fall)', [cSCL, cSDA], ['all']]
-        ,['tHD_DAT_MI_R', 'tHD_DAT_MI_R: Data input hold time(master input)(rise)', [cSDA, cSCL], ['all']]
-        ,['tHD_DAT_MI_F', 'tHD_DAT_MI_F: Data input hold time(master input)(fall)', [cSDA, cSCL], ['all']]
-        ,['tAA_R', 'tAA_R: SDA Output valid from clock(rise)', [cSDA, cSCL], ['all']]
-        ,['tAA_F', 'tAA_F: SDA Output valid from clock(fall)', [cSDA, cSCL], ['all']]
-        ,['tDH_R', 'tDH_R: SDA output hold time(rise)', [cSDA, cSCL], ['all']]
-        ,['tDH_F', 'tDH_F: SDA output hold time(fall)', [cSDA, cSCL], ['all']]
+         ['tSCL', 'tSCL: SCL period', [[cSCL, thSCL[0]], [cSCL, thSCL[0]]], ['min', 'max']]
+        ,['tR_SCL', 'tR_SCL: SCL rise time', [[cSCL, thSCL[1]], [cSCL, thSCL[0]]], ['min', 'max']]
+        ,['tF_SCL', 'tF_SCL: SCL fall time', [[cSCL, thSCL[0]], [cSCL, thSCL[1]]], ['min', 'max']]
+        ,['tLOW', 'tLOW: SCL low time', [[cSCL, thSCL[0]], [cSCL, thSCL[0]]], ['min', 'max']]
+        ,['tHIGH', 'tHIGH: SCL high time', [[cSCL, thSCL[1]], [cSCL, thSCL[1]]], ['min', 'max']]
+        ,['tR_SDA', 'tR_SDA: SDA rise time', [[cSDA, thSDA[1]] , [cSDA, thSDA[0]]], ['min', 'max']]
+        ,['tF_SDA', 'tF_SDA: SDA fall time', [[cSDA, thSDA[0]] , [cSDA, thSDA[1]]], ['min', 'max']]
+        ,['tSU_STA', 'tSU_STA: Start condition setup time', [[cSDA, thSDA[1]], [cSCL, thSCL[1]]], ['all']]
+        ,['tHD_STA', 'tHD_STA: Start condition hold time', [[cSCL, thSCL[1]], [cSDA, thSDA[0]]], ['all']]
+        ,['tBUF', 'tBUF: Bus free time', [[cSDA, thSDA[1]], [cSDA, thSDA[1]]], ['all']]
+        ,['tSU_STO', 'tSU_STO: Stop condition setup time', [[cSDA, thSDA[0]], [cSCL, thSCL[1]]], ['all']]
+        ,['tSU_DAT_R', 'tSU_DAT_R: Data input setup time(rise)', [[cSCL, thSCL[0]], [cSDA,thSDA[1]]], ['all']]
+        ,['tSU_DAT_F', 'tSU_DAT_F: Data input setup time(fall)', [[cSCL, thSCL[0]], [cSDA,thSDA[0]]], ['all']]
+        ,['tHD_DAT_R', 'tHD_DAT_R: Data input hold time(rise)', [[cSDA, thSDA[0]], [cSCL, thSCL[0]]], ['all']]
+        ,['tHD_DAT_F', 'tHD_DAT_F: Data input hold time(fall)', [[cSDA, thSDA[1]], [cSCL, thSCL[0]]], ['all']]
+        ,['tSU_DAT_MI_R', 'tSU_DAT_MI_R: Data input setup time(master input)(rise)', [[cSCL, thSCL[0]], [cSDA,thSDA[1]]], ['all']]
+        ,['tSU_DAT_MI_F', 'tSU_DAT_MI_F: Data input setup time(master input)(fall)', [[cSCL, thSCL[0]], [cSDA,thSDA[0]]], ['all']]
+        ,['tHD_DAT_MI_R', 'tHD_DAT_MI_R: Data input hold time(master input)(rise)', [[cSDA, thSDA[0]], [cSCL, thSCL[0]]], ['all']]
+        ,['tHD_DAT_MI_F', 'tHD_DAT_MI_F: Data input hold time(master input)(fall)', [[cSDA, thSDA[1]], [cSCL, thSCL[0]]], ['all']]
+        ,['tAA_R', 'tAA_R: SDA Output valid from clock(rise)', [[cSDA, thSDA[1]], [cSCL, thSCL[0]]], ['all']]
+        ,['tAA_F', 'tAA_F: SDA Output valid from clock(fall)', [[cSDA, thSDA[0]], [cSCL, thSCL[0]]], ['all']]
+        ,['tDH_R', 'tDH_R: SDA output hold time(rise)', [[cSDA, thSDA[0]], [cSCL, thSCL[0]]], ['all']]
+        ,['tDH_F', 'tDH_F: SDA output hold time(fall)', [[cSDA, thSDA[1]], [cSCL, thSCL[0]]], ['all']]
     ]
 
-def StrSettings_I2C(cSCL, cSDA):
+def StrSettings_I2C(
+    chn    #チャネル番号
+):
+    cSCL, cSDA = chn
     return [
         ['St', 1, 'S', cSDA, 3.5]
         ,['Sp', 1, 'P', cSDA, 3.5]
@@ -511,12 +526,12 @@ class TASettings:
     def __init__(self, type, logicLevel, ths, chn):
         if type == 'SPI':
             self.tas = TASettings_SPI(ths, chn)
-            self.disp = DispSettings_SPI(chn[0], chn[1], chn[2], chn[3])
-            self.strs = StrSettings_SPI(chn[0], chn[1], chn[2], chn[3])
+            self.disp = DispSettings_SPI(ths, chn)
+            self.strs = StrSettings_SPI(chn)
         elif type == 'I2C':
             self.tas = TASettings_I2C(ths, chn)
-            self.disp = DispSettings_I2C(chn[0], chn[1])
-            self.strs = StrSettings_I2C(chn[0], chn[1])
+            self.disp = DispSettings_I2C(ths, chn)
+            self.strs = StrSettings_I2C(chn)
         self.hratios = [1, 2, 0.5]
         self.ylim = [[-logicLevel*0.3, logicLevel*1.52], [-logicLevel*0.2, logicLevel*1.2], [0, 1]]
         self.yticks = [[0, int(logicLevel)] for i in range(2)]
