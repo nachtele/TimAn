@@ -538,6 +538,7 @@ class TASettings:
         self.lny = [[1.4, 0.7], [1.4, 0.4]]
         self.vly = 0.3
         self.vty = 0.0
+        self.zipos = [(-50, 18), (-50, 1)]
         self.mainZoom = None
         self.figsize = (6.4, 4.8)
         self.dpi = 100

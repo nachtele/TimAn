@@ -39,6 +39,7 @@ for chi, chd in zip(dat0.chI, dat0.chDat):
 
 # 解析
 tas = TASettings(type, logicLevel, ths, chn)
+tas.timestep = timestep
 ta = TimingAnalyzer(tas.tas)
 tdat = np.array(dat).T
 dlen = len(tdat)

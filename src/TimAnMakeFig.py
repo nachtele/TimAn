@@ -19,11 +19,11 @@ def engFmt(num):
 ap = dict(color = 'gray', alpha = 0.5, width = 0, headwidth = 0, shrink = 0.0)
 
 class makeFig:
-    def __init__(self, tim, dat, tas, chs):
+    def __init__(self, fig, tim, dat, tas, chs):
         self.aplist = []    #再設定時に削除するannotateとpatchリスト
         self.hllist = []    #再設定時に削除するhlineリスト
         nTr = len(dat)
-        self.fig = plt.figure(figsize=tas.figsize, dpi=tas.dpi)
+        self.fig = fig
         gs0 = gridspec.GridSpec(len(tas.hratios), 1, height_ratios=tas.hratios)
         gs1 = [gs0[g].subgridspec(nTr, 1, hspace=0) for g in range(2)]
         self.ax = [[self.fig.add_subplot(gs1[g][tr]) for tr in range(nTr)] for g in range(2)]
@@ -51,15 +51,17 @@ class makeFig:
         for [c, th] in ch:
             self.hllist.append(self.ax[1][c].axhline(y=th, xmin=0, xmax=1, color='gray', alpha=0.5))
         pass
-    def ann(self, ch, v, tg, tas, lblx):
+    def ann(self, ch, v, tg, tas, zm, zr):
         for anp in self.aplist: anp.remove()
         self.aplist[:] = []
         for [c, th], ly, t in zip(ch, tas.lny, tg):
-            self.aplist.append(self.ax[1][c].annotate(f'{th:.2f}', xy=(lblx, th), xytext=(4, 0), va='center', textcoords='offset pixels'))
+            self.aplist.append(self.ax[1][c].annotate(f'{th:.2f}', xy=(zm[1], th), xytext=(4, 0), va='center', textcoords='offset pixels'))
             self.aplist.append(self.ax[2][0].annotate(engFmt(t), xy=(t, ly[0]), xytext=(t, ly[1]), annotation_clip=False, arrowprops=ap))
             for ax in self.ax[1][c:]:
                 self.aplist.append(ax.axvline(x=t, ymin=0, ymax=1, color='gray', alpha=0.5))
         self.aplist.append(self.ax[2][0].annotate(engFmt(v), xy=(tg[1], tas.vty), xytext=(tg[1], tas.vty)))
+        self.aplist.append(self.ax[2][0].annotate('SP:' + engFmt(tas.timestep), xy=(zm[0], 0), xytext=(tas.zipos[0]), va='center', textcoords='offset pixels'))
+        self.aplist.append(self.ax[2][0].annotate('zoom:' + engFmt(zr), xy=(zm[0], 0), xytext=(tas.zipos[1]), va='center', textcoords='offset pixels'))
         patch = patches.FancyArrow(x=tg[1], y=tas.vly, dx=v, dy=0, width=0, head_width=0.1, head_length=0.05*v, length_includes_head=True)
         self.ax[2][0].add_patch(patch)
         self.aplist.append(patch)
@@ -79,7 +81,8 @@ def zoomScales(llimit):
 def plotTa(tim, dat, ta, tas, chs, zs, dstDir):
     plt.rcParams['font.family'] = 'MS Gothic'
     dispList = []
-    afig= makeFig(tim, dat, tas, chs)
+    fig = plt.figure(figsize=tas.figsize, dpi=tas.dpi)
+    afig= makeFig(fig, tim, dat, tas, chs)
     afig.setStr(ta, tas.strs)
     os.mkdir(dstDir)
     dn = len(tas.disp)
@@ -106,22 +109,25 @@ def plotTa(tim, dat, ta, tas, chs, zs, dstDir):
         dispList.append(sellist)
         sn = len(sellist)
         for si, [i, dstFile] in enumerate(sellist):
-            v = hv[i]
-            tg = ta.hg[name][i]
-            z = zs[np.searchsorted(zs, abs(v)*2)] if abs(v)*2 > zmin else zmin
-            xmax = (tg[0] + tg[1] + z) / 2
-            xmin = xmax - z
-            afig.zoom(xmin, xmax)
-            afig.ann(ch, v, tg, tas, xmax)
-            if tas.mainZoom:
-                for mzmin, mzmax in tas.mainZoom:
-                    if mzmin <= tg[0] and tg[1] <= mzmax:
-                        afig.ax[0][0].set_xlim(xmin=mzmin)
-                        afig.ax[0][0].set_xlim(xmax=mzmax)
-                        break
+            afig_zoom(afig, ta, tas, ch, zs, zmin, name, i)
             plt.savefig(dstFile)
             print('\r', di+1, '/', dn, ' ', name, ' ', si+1, '/', sn, end='')
     return dispList
+
+def afig_zoom(afig, ta, tas, ch, zs, zmin, name, i):
+    v = ta.hv[name][i]
+    tg = ta.hg[name][i]
+    z = zs[np.searchsorted(zs, abs(v)*2)] if abs(v)*2 > zmin else zmin
+    xmax = (tg[0] + tg[1] + z) / 2
+    xmin = xmax - z
+    afig.zoom(xmin, xmax)
+    afig.ann(ch, v, tg, tas, (xmin, xmax), z)
+    if tas.mainZoom:
+        for mzmin, mzmax in tas.mainZoom:
+            if mzmin <= tg[0] and tg[1] <= mzmax:
+                afig.ax[0][0].set_xlim(xmin=mzmin)
+                afig.ax[0][0].set_xlim(xmax=mzmax)
+                break
 
 def taXlsx(ta, tas, dispList, info, dstDir):
     wb = openpyxl.Workbook()

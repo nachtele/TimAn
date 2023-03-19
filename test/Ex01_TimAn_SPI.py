@@ -65,6 +65,7 @@ if __name__ == '__main__':
     ta = TimingAnalyzer(tas.tas)
     tdat = np.array(dat).T
     timestep = 20E-9
+    tas.timestep = timestep
     tim = np.arange(0, len(tdat)*timestep, timestep)
     for tm, dt in zip(tim, tdat):
         ta.datain(tm, dt)
