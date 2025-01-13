@@ -25,14 +25,16 @@ class makeFig:
         nTr = len(dat)
         self.fig = fig
         gs0 = gridspec.GridSpec(len(tas.hratios), 1, height_ratios=tas.hratios)
-        gs1 = [gs0[g].subgridspec(nTr, 1, hspace=0) for g in range(2)]
+        gs1 = [gs0[g].subgridspec(nTr, 1, hspace=0, height_ratios=tas.hratios2[g]) for g in range(2)]
         self.ax = [[self.fig.add_subplot(gs1[g][tr]) for tr in range(nTr)] for g in range(2)]
         for i, d in enumerate(dat):
             for g in range(2):
                 self.ax[g][i].set_title(chs[0][i], x=-0.06, y=0.2, loc='right', verticalalignment='center')
                 self.ax[g][i].plot(tim, d, color=chs[1][i])
-                self.ax[g][i].set_ylim(tas.ylim[g])
-                self.ax[g][i].set_yticks(tas.yticks[g])
+                self.ax[g][i].set_ylim(tas.ylim[g][i])
+                yticks = tas.yticks[g][i]
+                if yticks:
+                    self.ax[g][i].set_yticks(tas.yticks[g][i])
                 if i > 0: self.ax[g][i].sharex(self.ax[g][i-1])
                 if i < nTr-1: self.ax[g][i].tick_params(labelbottom=False)
         self.ax.append([self.fig.add_subplot(gs0[2])])
@@ -160,9 +162,8 @@ def taXlsx(ta, tas, dispList, info, dstDir):
 
     #波形シート
     ws = wb.create_sheet('waveform')
-    iScale = 0.50
-    InitCell = [3,2]
-    rowInc = 14
+    iScale = tas.ws_waveform_iScale
+    InitCell = tas.ws_waveform_initCell
     colInc = 3
     col = InitCell[1]
     for ds, dl in zip(tas.disp, dispList):
@@ -184,13 +185,13 @@ def taXlsx(ta, tas, dispList, info, dstDir):
                 ws.cell(row+ri+1, col).value = t
                 ws.cell(row+ri+1, col+1).value = v
                 ws.cell(row+ri+1, col+1).number_format = f
-            for i,w in enumerate([14, 12, 44]):
+            for i,w in enumerate(tas.ws_waveform_columnwidth):
                 ws.column_dimensions[openpyxl.utils.get_column_letter(col+i)].width = w
             img= Image(d[1])
             img.height *= iScale
             img.width *= iScale
             cell = ws.cell(row+1, col+2).coordinate
             ws.add_image(img, cell)
-            row += rowInc
+            row += tas.ws_waveform_rowinc
         col += colInc
     wb.save(dstDir + '.xlsx')

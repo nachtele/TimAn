@@ -533,8 +533,10 @@ class TASettings:
             self.disp = DispSettings_I2C(ths, chn)
             self.strs = StrSettings_I2C(chn)
         self.hratios = [1, 2, 0.5]
-        self.ylim = [[-logicLevel*0.3, logicLevel*1.52], [-logicLevel*0.2, logicLevel*1.2], [0, 1]]
-        self.yticks = [[0, int(logicLevel)] for i in range(2)]
+        nch = len(chn)
+        self.hratios2 = [[1] * nch] * 2
+        self.ylim = [[-logicLevel*0.3, logicLevel*1.52] * nch, [[-logicLevel*0.2, logicLevel*1.2]] * nch, [0, 1]]
+        self.yticks = [[[0, int(logicLevel)]] * nch for i in range(2)]
         self.lny = [[1.4, 0.7], [1.4, 0.4]]
         self.vly = 0.3
         self.vty = 0.0
@@ -542,3 +544,7 @@ class TASettings:
         self.mainZoom = None
         self.figsize = (6.4, 4.8)
         self.dpi = 100
+        self.ws_waveform_iScale = 0.50
+        self.ws_waveform_initCell = [3,2]
+        self.ws_waveform_columnwidth = [14, 12, 44]
+        self.ws_waveform_rowinc = 14
