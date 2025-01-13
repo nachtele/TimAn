@@ -154,7 +154,7 @@ def taXlsx(ta, tas, dispList, info, dstDir):
             for ci, c in enumerate(cc):
                 ws.cell(row, col+ci+1).value = c
                 ws.cell(row, col+ci+1).number_format = '##0.000E+0'
-                ws.column_dimensions[openpyxl.utils.get_column_letter(col+ci+1)].width = 10
+                ws.column_dimensions[openpyxl.utils.get_column_letter(col+ci+1)].width = 12
             row += 1
         col += colInc
 
@@ -164,9 +164,9 @@ def taXlsx(ta, tas, dispList, info, dstDir):
     InitCell = [3,2]
     rowInc = 14
     colInc = 3
-    row = InitCell[0]
+    col = InitCell[1]
     for ds, dl in zip(tas.disp, dispList):
-        col = InitCell[1]
+        row = InitCell[0]
         name = ds[0]
         n = len(ta.hv[name])
         ws.cell(row, col).value = ds[1]
@@ -184,13 +184,13 @@ def taXlsx(ta, tas, dispList, info, dstDir):
                 ws.cell(row+ri+1, col).value = t
                 ws.cell(row+ri+1, col+1).value = v
                 ws.cell(row+ri+1, col+1).number_format = f
-            for i,w in enumerate([14, 11, 44]):
+            for i,w in enumerate([14, 12, 44]):
                 ws.column_dimensions[openpyxl.utils.get_column_letter(col+i)].width = w
             img= Image(d[1])
             img.height *= iScale
             img.width *= iScale
             cell = ws.cell(row+1, col+2).coordinate
             ws.add_image(img, cell)
-            col += colInc
-        row += rowInc
+            row += rowInc
+        col += colInc
     wb.save(dstDir + '.xlsx')
